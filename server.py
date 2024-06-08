@@ -15,17 +15,26 @@ client = AsyncClient()
 pong_time_ms = 1000
 is_running = False
 
+import traceback  # Add this import at the top
+
 @app.get("/ping")
 async def ping(target: str):
     global is_running
     if is_running:
         await asyncio.sleep(pong_time_ms / 1000)
         try:
-            response = await client.get(f"http://{target}/ping?target=localhost:8000")
+            target_url = f"http://{target}/ping?target=localhost:8000"
+            response = await client.get(target_url, timeout=10)  # Increase timeout to 10 seconds
             return {"message": response.json()}
         except Exception as e:
+            traceback.print_exc()  # Print full traceback for debugging
+            print(f"Exception occurred during ping to {target}: {str(e)}")
             raise HTTPException(status_code=500, detail=str(e))
     return {"message": "game not running"}
+
+
+
+
 
 @app.post("/start")
 async def start_game(request: StartRequest):
